@@ -35,6 +35,21 @@ The window starts transparent, borderless, always-on-top, and shows
 `idle_neutral_base.png`. **Quit via the tray icon** (the window has no taskbar
 entry by design — see `src/TrayMenu.cs`).
 
+## Compile-check (no Godot editor needed)
+
+A Godot 4 C# project compiles from the `Godot.NET.Sdk` + `GodotSharp` NuGet
+packages alone, so you can verify the C# without installing the editor:
+
+```bash
+dotnet build DesktopPet.csproj                      # compile-check (0 warnings target)
+dotnet format DesktopPet.csproj --verify-no-changes # formatting/style lint
+```
+
+This is what the SessionStart hook (`.claude/hooks/session-start.sh`) sets up for
+Claude Code on the web: it installs the .NET 8 SDK and restores packages so these
+commands run in a fresh web session. Note this checks that the code **compiles** —
+actually **running** the pet still needs the Godot 4.3 .NET editor on a desktop.
+
 ## Build order
 
 Follow §5 of the plan. Milestones 1–6 work on placeholders. Component → milestone
