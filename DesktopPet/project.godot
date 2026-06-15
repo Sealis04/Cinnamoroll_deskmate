@@ -1,0 +1,35 @@
+; Godot 4.3 (.NET) project configuration for the Cinnamoroll DeskMate.
+; Pinned engine: Godot 4.3 mono/.NET build, .NET 8 SDK. See README.md.
+
+config_version=5
+
+[application]
+
+config/name="Cinnamoroll DeskMate"
+config/description="Local desktop sprite-pet."
+run/main_scene="res://scenes/Pet.tscn"
+config/features=PackedStringArray("4.3", "C#", "Forward Plus")
+config/icon="res://assets/sprites/idle_neutral_base.png"
+
+[dotnet]
+
+project/assembly_name="DesktopPet"
+
+[display]
+
+; Window matches the sprite canvas; transparency + borderless + always-on-top
+; give the "floating pet" effect. per_pixel_transparency/allowed must be ON for
+; the transparent window to actually punch through to the desktop.
+window/size/viewport_width=512
+window/size/viewport_height=512
+window/size/borderless=true
+window/size/transparent=true
+window/size/always_on_top=true
+window/size/no_focus=true
+window/per_pixel_transparency/allowed=true
+window/subwindows/embed_subwindows=false
+
+[rendering]
+
+; Clear the root viewport to transparent so only the sprite alpha is visible.
+viewport/transparent_background=true
