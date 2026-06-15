@@ -2,7 +2,7 @@
 """Generate placeholder sprites so Track B can be built before Track A renders.
 
 Writes flat-colored stand-ins that follow the naming contract in
-assets/sprites/README.md (plan §2.4). Requires Pillow (`pip install pillow`).
+assets/sprites/README.md (plan §2.7). Requires Pillow (`pip install pillow`).
 
 Run from the DesktopPet/ directory:
     python3 tools/make_placeholders.py

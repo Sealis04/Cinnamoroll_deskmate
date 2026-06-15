@@ -1,7 +1,7 @@
 # assets/sprites — the Track A ↔ Track B contract
 
 The app loads everything in this folder **by name**. Filenames must match exactly
-(plan §2.4). All files: same canvas size, RGBA PNG.
+(plan §2.7). All files: same canvas size, RGBA PNG.
 
 ```
 idle_neutral_base.png       # full character, pupils HIDDEN

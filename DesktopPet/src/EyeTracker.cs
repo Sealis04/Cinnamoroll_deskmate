@@ -5,7 +5,7 @@ namespace DesktopPet;
 /// <summary>
 /// Moves the pupil sprite toward the cursor, clamped to an ellipse matching the
 /// eye socket. Active only in NEUTRAL (plan §4.3). Eye-socket centers and radii
-/// come from Track A's deliverable (plan §2.5).
+/// come from Track A's deliverable (plan §2.8).
 /// </summary>
 public partial class EyeTracker : Node
 {

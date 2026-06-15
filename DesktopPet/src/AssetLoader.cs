@@ -5,7 +5,7 @@ using System.Linq;
 namespace DesktopPet;
 
 /// <summary>
-/// Loads sprites following the Track A naming contract (plan §2.4) and degrades
+/// Loads sprites following the Track A naming contract (plan §2.7) and degrades
 /// gracefully when assets are missing: a magenta placeholder texture is returned
 /// and a warning logged, so a half-populated assets/ folder never crashes the app.
 /// </summary>

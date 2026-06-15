@@ -30,75 +30,15 @@ The Goo Engine anime aesthetic lives in its custom Eevee NPR shader nodes. Those
 
 ## 2. Track A — Goo Engine character pipeline & render-out
 
-**Chronological authoring order:** model (§2.6) → rig (§2.7) → animate (§2.8) →
-then apply the render rules (§2.1) and naming contract (§2.4) to bake out PNGs.
-The render/contract sections (§2.1–2.5) are listed first because they're the
-*interface* Track B depends on; the modeling/rigging/animation sections
-(§2.6–2.8) are the *production work* that feeds them.
+This section runs in production order: **model (§2.1) → rig (§2.2) → animate
+(§2.3) → render rules (§2.4) → two-layer split (§2.5) → states (§2.6) → naming
+contract (§2.7) → deliverable (§2.8)**. Sections §2.4–2.8 are the *interface*
+Track B depends on; §2.1–2.3 are the *production work* that feeds them.
 
-### 2.1 Global render rules (apply to EVERY render)
-These guarantee the sprites line up when composited and swapped in the app.
-
-- **Fixed canvas:** one resolution for everything, e.g. **512×512 px**. Never change it between renders.
-- **Fixed camera:** lock the camera (orthographic preferred), centered on the character. Do **not** move it between states. Character stays registered to the same canvas position across all frames.
-- **Transparent background:** Render Properties → Film → **Transparent** ON. Output **PNG with RGBA / alpha**.
-- **Consistent lighting:** same light setup across all renders so shading matches frame to frame.
-- **Frame rate for sequences:** render animated states at the app's playback rate — **12 fps** is plenty for a pet (24 if you want extra smoothness). Decide once, keep it.
-
-### 2.2 The two-layer split (for eye tracking)
-The neutral resting pose is rendered as **two** aligned layers so the app can move the pupils independently:
-
-- **Base layer** — full character and face, but with **pupils/irises hidden** (eye whites/sockets visible, no pupils). Use a Blender **View Layer** or Collection visibility toggle to hide the pupil geometry.
-- **Pupil layer** — **only** the pupil/iris geometry visible, everything else hidden, transparent background.
-
-Both rendered from the identical locked camera/canvas so the pupil layer overlays the base perfectly. In the app the pupil layer sits on top and is nudged toward the cursor (clamped to the socket).
-
-> Only the **neutral resting pose** needs the two-layer split. Animated idles (below) bake the eyes in.
-
-### 2.3 Animation states to render
-Each animated state is a frame sequence with eyes baked into the frames (live tracking pauses during animations — see §4.3).
-
-| State | Type | Notes |
-|---|---|---|
-| `idle_neutral` | **2 static PNGs** (base + pupils) | The resting pose with live eye tracking |
-| `anim_blink` | short sequence | quick blink; can also be an overlay if preferred |
-| `anim_bounce` | sequence | little hop/bob |
-| `anim_lookaround` | sequence | glances around, stretches |
-| `anim_sit` | sequence | sits/settles |
-| `react_click` | sequence | reaction when clicked (surprised/happy) |
-| `react_drag` | sequence/loop | dangle pose while being dragged |
-| `react_sleep` | sequence/loop | when idle a long time or in a "quiet" app |
-
-(Start with `idle_neutral`, `anim_blink`, `anim_bounce` to get the loop working; add the rest later.)
-
-### 2.4 Naming convention (the contract between Track A and Track B)
-The app loads assets by name, so this must be exact.
-
-```
-assets/sprites/
-  idle_neutral_base.png
-  idle_neutral_pupils.png
-  anim_blink_000.png, anim_blink_001.png, ...
-  anim_bounce_000.png, anim_bounce_001.png, ...
-  anim_lookaround_000.png, ...
-  anim_sit_000.png, ...
-  react_click_000.png, ...
-  react_drag_000.png, ...
-  react_sleep_000.png, ...
-```
-
-- Sequences: `{state}_{frame:000}.png`, zero-padded, starting at `000`.
-- All same canvas size, all RGBA.
-
-### 2.5 Track A deliverable
-A populated `assets/sprites/` folder following §2.4, plus a one-line note of the chosen **canvas size**, **fps**, and **eye-socket center coordinates** (pixel x,y of each eye center in the neutral pose — the app needs these to anchor pupil offset).
-
----
-
-### 2.6 Modeling the rig-ready mesh
+### 2.1 Modeling the rig-ready mesh
 
 Goal: a chibi character whose **silhouette reads at 512²**, whose **eyes are
-split into separable geometry** (the hard requirement that makes §2.2 possible),
+split into separable geometry** (the hard requirement that makes §2.5 possible),
 and whose proportions stay registered to the locked orthographic camera.
 
 **Reference & proportions**
@@ -114,14 +54,14 @@ and whose proportions stay registered to the locked orthographic camera.
   keys and the jaw bone deform cleanly.
 - Build order: head → body → ears → muzzle/snout → arms → legs → tail.
 
-**Eyes — the part that gates the two-layer split (§2.2)**
+**Eyes — the part that gates the two-layer split (§2.5)**
 - Model the **iris/pupil as its own geometry, separate from the eye-white/socket**.
   Recommended anime approach: a slightly recessed **eye-white surface** plus a
   **flat iris/pupil "decal" plane** that sits just in front of it and faces the
   camera. Flat iris planes are trivial to render-isolate and keep the pupil on a
   consistent plane for clean compositing.
 - Put **every pupil/iris object in a dedicated `Pupils` Collection** so a single
-  visibility toggle drives both render passes in §2.2 (Pupils hidden = base layer;
+  visibility toggle drives both render passes in §2.5 (Pupils hidden = base layer;
   only Pupils visible = pupil layer).
 
 **Materials, outlines, collections**
@@ -134,9 +74,9 @@ and whose proportions stay registered to the locked orthographic camera.
 **Scale & origin**
 - Set the character **origin at a single consistent point** (e.g. base of the body)
   and place it on the world origin under the locked camera, so the **rest pose
-  registers exactly** to where the base/pupil layers are composited (§2.2, §2.1).
+  registers exactly** to where the base/pupil layers are composited (§2.5, §2.4).
 
-### 2.7 Rigging
+### 2.2 Rigging
 
 Keep it minimal — a chibi pet needs expressiveness in the **face and squash**, not
 a full biped IK rig.
@@ -164,10 +104,10 @@ a full biped IK rig.
 - Add **custom bone shapes** for usability; **weight-paint and test** deformation,
   paying attention to the ears, tail, and the squash on the body.
 
-### 2.8 Animation authoring
+### 2.3 Animation authoring
 
 **Global rules**
-- Author the Blender scene at the chosen **12 fps** (matches §2.1).
+- Author the Blender scene at the chosen **12 fps** (matches §2.4).
 - Apply the **12 principles** where they pay off: anticipation, squash/stretch,
   ease in/out, overshoot, and **follow-through on ears & tail**.
 - **Transition contract with Track B:** the app cuts NEUTRAL → clip → NEUTRAL with
@@ -181,7 +121,7 @@ a full biped IK rig.
 
 | Clip | ~Frames | Loop? | Beats |
 |---|---|---|---|
-| `idle_neutral` | 1 (static) | — | The rest pose. Rendered as base + pupils (§2.2), not animated. |
+| `idle_neutral` | 1 (static) | — | The rest pose. Rendered as base + pupils (§2.5), not animated. |
 | `anim_blink` | 3–5 | no | open → half → closed → half → open. Quick. Can also be an overlay. |
 | `anim_bounce` | 10–14 | no (return to neutral) | squash anticipation → hop + overshoot → settle; ears trail. |
 | `anim_lookaround` | 18–30 | no | head turns L/R, eyes dart via `eye_target`, small stretch, return. |
@@ -190,12 +130,12 @@ a full biped IK rig.
 | `react_drag` | 8–12 | **yes** | held-by-scruff dangle; gentle pendulum sway; first ≈ last. |
 | `react_sleep` | 12–24 | **yes** | slow breathing rise/fall (+ optional Zzz); first ≈ last. |
 
-**Render-out workflow (authoring → the §2.4 contract)**
+**Render-out workflow (authoring → the §2.7 contract)**
 - Per Action: set the scene **Frame Start = 0** and end to the clip length, then set
   the output path so Blender writes the contract names directly, e.g.
   output `//render/anim_bounce_###` → `anim_bounce_000.png, _001, …` (3 `#` = the
-  zero-padding §2.4 requires). RGBA PNG, transparent film (§2.1).
-- **Neutral two-layer pass (§2.2):** render the single rest frame **twice** — once
+  zero-padding §2.7 requires). RGBA PNG, transparent film (§2.4).
+- **Neutral two-layer pass (§2.5):** render the single rest frame **twice** — once
   with the `Pupils` Collection hidden → `idle_neutral_base.png`; once with **only**
   `Pupils` visible → `idle_neutral_pupils.png`.
 
@@ -204,7 +144,7 @@ a full biped IK rig.
   **registration** (no canvas drift); verify loops have **no seam**; confirm the
   **squash/stretch stays inside the 512² canvas**.
 - After the final neutral render, read off the **pixel center of each eye** in the
-  image editor → these are the `eye-socket center coordinates` in the §2.5
+  image editor → these are the `eye-socket center coordinates` in the §2.8
   deliverable and the `LeftEyeCenter` / `RightEyeCenter` exports in `EyeTracker.cs`.
 
 **Suggested source organization (Track A side, outside the app repo)**
@@ -214,6 +154,63 @@ art/
   render_settings.blend        # or a saved render preset (512², 12fps, transparent)
   refs/                        # front/side reference images
 ```
+
+### 2.4 Global render rules (apply to EVERY render)
+These guarantee the sprites line up when composited and swapped in the app.
+
+- **Fixed canvas:** one resolution for everything, e.g. **512×512 px**. Never change it between renders.
+- **Fixed camera:** lock the camera (orthographic preferred), centered on the character. Do **not** move it between states. Character stays registered to the same canvas position across all frames.
+- **Transparent background:** Render Properties → Film → **Transparent** ON. Output **PNG with RGBA / alpha**.
+- **Consistent lighting:** same light setup across all renders so shading matches frame to frame.
+- **Frame rate for sequences:** render animated states at the app's playback rate — **12 fps** is plenty for a pet (24 if you want extra smoothness). Decide once, keep it.
+
+### 2.5 The two-layer split (for eye tracking)
+The neutral resting pose is rendered as **two** aligned layers so the app can move the pupils independently:
+
+- **Base layer** — full character and face, but with **pupils/irises hidden** (eye whites/sockets visible, no pupils). Use a Blender **View Layer** or Collection visibility toggle to hide the pupil geometry.
+- **Pupil layer** — **only** the pupil/iris geometry visible, everything else hidden, transparent background.
+
+Both rendered from the identical locked camera/canvas so the pupil layer overlays the base perfectly. In the app the pupil layer sits on top and is nudged toward the cursor (clamped to the socket).
+
+> Only the **neutral resting pose** needs the two-layer split. Animated idles (below) bake the eyes in.
+
+### 2.6 Animation states to render
+Each animated state is a frame sequence with eyes baked into the frames (live tracking pauses during animations — see §4.3).
+
+| State | Type | Notes |
+|---|---|---|
+| `idle_neutral` | **2 static PNGs** (base + pupils) | The resting pose with live eye tracking |
+| `anim_blink` | short sequence | quick blink; can also be an overlay if preferred |
+| `anim_bounce` | sequence | little hop/bob |
+| `anim_lookaround` | sequence | glances around, stretches |
+| `anim_sit` | sequence | sits/settles |
+| `react_click` | sequence | reaction when clicked (surprised/happy) |
+| `react_drag` | sequence/loop | dangle pose while being dragged |
+| `react_sleep` | sequence/loop | when idle a long time or in a "quiet" app |
+
+(Start with `idle_neutral`, `anim_blink`, `anim_bounce` to get the loop working; add the rest later.)
+
+### 2.7 Naming convention (the contract between Track A and Track B)
+The app loads assets by name, so this must be exact.
+
+```
+assets/sprites/
+  idle_neutral_base.png
+  idle_neutral_pupils.png
+  anim_blink_000.png, anim_blink_001.png, ...
+  anim_bounce_000.png, anim_bounce_001.png, ...
+  anim_lookaround_000.png, ...
+  anim_sit_000.png, ...
+  react_click_000.png, ...
+  react_drag_000.png, ...
+  react_sleep_000.png, ...
+```
+
+- Sequences: `{state}_{frame:000}.png`, zero-padded, starting at `000`.
+- All same canvas size, all RGBA.
+
+### 2.8 Track A deliverable
+A populated `assets/sprites/` folder following §2.7, plus a one-line note of the chosen **canvas size**, **fps**, and **eye-socket center coordinates** (pixel x,y of each eye center in the neutral pose — the app needs these to anchor pupil offset).
 
 ---
 
@@ -272,7 +269,7 @@ DesktopPet/
 ### 4.4 Random idle animations (`IdleScheduler.cs` + `StateMachine.cs`)
 - Timer fires on a **random interval** (config: e.g. 8–20s).
 - On fire (only if currently NEUTRAL): pick a random clip from the idle set, switch to IDLE_ANIM, play the `AnimatedSprite2D` sequence once, then return to NEUTRAL.
-- **Idle-timeout → sleep:** a separate inactivity timer (config `[idle] sleep_after_seconds`) tracks time since the last user interaction (move, click, drag, foreground-app change). When it elapses while in NEUTRAL, enter SLEEP and loop `react_sleep`; any interaction wakes the pet back to NEUTRAL. This is the trigger that §2.3's `react_sleep` referenced but the state machine previously didn't drive.
+- **Idle-timeout → sleep:** a separate inactivity timer (config `[idle] sleep_after_seconds`) tracks time since the last user interaction (move, click, drag, foreground-app change). When it elapses while in NEUTRAL, enter SLEEP and loop `react_sleep`; any interaction wakes the pet back to NEUTRAL. This is the trigger that §2.6's `react_sleep` referenced but the state machine previously didn't drive.
 - Pre-rendered, so they look better than real-time would.
 
 ### 4.5 Drag & drop (`DragHandler.cs`)
